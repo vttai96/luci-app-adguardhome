@@ -17,19 +17,20 @@ check_wgetcurl(){
 	which curl > /dev/null 2>&1 && downloader="curl -L -k --retry 2 --connect-timeout 20 -o" && return
 	which wget-ssl > /dev/null 2>&1 && downloader="wget-ssl --no-check-certificate -t 2 -T 20 -O" && return
 	[ -z "$1" ] && opkg update || (echo "未安装 opkg!" && EXIT 1)
-	[ -z "$1" ] && (opkg remove wget wget-nossl --force-depends ; opkg install wget ; check_wgetcurl 1 ;return)
+	[ -z "$1" ] && (opkg remove wget wget-nossl --force-depends ; opkg install wget ; check_wgetcurl 1 ; return)
 	[ "$1" == "1" ] && (opkg install curl ; check_wgetcurl 2 ; return)
 	echo "未安装 curl 或 wget!" && EXIT 1
 }
+
 check_latest_version(){
 	echo -e "\n执行文件存储路径: ${binpath%/*}"
 	check_wgetcurl
-	latest_ver="$(curl -s https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest 2>/dev/null | grep 'tag_name' | egrep -o 'v[0-9.]+')"
+	latest_ver="$(curl -s https://api.github.com/repos/AdguardTeam/AdGuardHome/releases 2>/dev/null | grep 'tag_name' | egrep -o 'v[0-9].+[0-9.]' | awk 'NR==1')"
 	if [ -z "$latest_ver" ]; then
 		echo -e "\n检查最新版本失败,请稍后重试!"  && EXIT 1
 	fi
 	if [ -f $binpath ]; then
-		now_ver="v$($binpath --version 2>/dev/null | egrep -o '[0-9]+[.][0-9.]+')"
+		now_ver="v$($binpath --version 2>/dev/null | egrep -o '[0-9].+[0-9.]+')"
 	else
 		now_ver="未知"
 	fi
@@ -40,7 +41,7 @@ check_latest_version(){
 			echo -e "\n已是最新版本!" 
 			if [ ! -z "$upxflag" ]; then
 				filesize=$(ls -l $binpath | awk '{ print $5 }')
-				if [ $filesize -gt 10240000 ]; then
+				if [ $filesize -gt "10240000" ]; then
 					doupx
 					mkdir -p /tmp/AdGuardHomeupdate/AdGuardHome > /dev/null 2>&1
 					rm -f /tmp/AdGuardHomeupdate/AdGuardHome/${binpath##*/}
@@ -58,6 +59,7 @@ check_latest_version(){
 			EXIT 0
 	fi
 }
+
 doupx(){
 	GET_Arch
 	upx_name="upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz"
@@ -74,6 +76,7 @@ doupx(){
 	xz -d -c /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz| tar -x -C "/tmp"
 	[ ! -f /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux/upx ] && echo -e "\n$upx_name 解压失败!" && EXIT 1
 }
+
 doupdate_core(){
 	mkdir -p "/tmp/AdGuardHomeupdate"
 	rm -rf /tmp/AdGuardHomeupdate/* > /dev/null 2>&1
@@ -122,11 +125,11 @@ doupdate_core(){
 	[ -f $binpath ] && rm -f $binpath
 	echo -e "\n移动核心文件到 ${binpath%/*} ..."
 	mv -f $downloadbin $binpath > /dev/null 2>&1
-	if [ ! -f $binpath ]; then
+	if [ ! -f "$binpath" ]; then
 		echo -e "执行文件移动失败!\n可能是设备空间不足导致,请使用UPX压缩,或更改[执行文件路径]为 /tmp/AdGuardHome" 
 		EXIT 1
 	fi
-	chmod +x $binpath
+	chmod +x "$binpath"
 	echo -e "\n重启 AdGuardHome 服务..."
 	rm -f /tmp/upx*.tar.xz
 	rm -rf /tmp/upx*	
@@ -135,6 +138,7 @@ doupdate_core(){
 	echo -e "\nAdGuardHome 核心更新成功!" 
 	EXIT 0
 }
+
 GET_Arch() {
 	Archt="$(opkg info kernel | grep Architecture | awk -F "[ _]" '{print($2)}')"
 	case $Archt in
@@ -195,11 +199,12 @@ EXIT(){
 	[ "$1" != "0" ] && touch /var/run/update_core_error
 	exit $1
 }
+
 main(){
 	check_if_already_running
 	check_latest_version $1
 }
-	trap "EXIT 1" SIGTERM SIGINT
-	touch /var/run/update_core
-	rm - rf /var/run/update_core_error 2>/dev/null
-	main $1
+trap "EXIT 1" SIGTERM SIGINT
+touch /var/run/update_core
+rm - rf /var/run/update_core_error 2>/dev/null
+main $1
