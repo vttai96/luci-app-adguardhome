@@ -1,7 +1,7 @@
 #!/bin/bash
 PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 binpath=$(uci get AdGuardHome.AdGuardHome.binpath)
-if [[ -z "$binpath" ]]; then
+if [[ -z "${binpath}" ]]; then
 	uci set AdGuardHome.AdGuardHome.binpath="/tmp/AdGuardHome/AdGuardHome"
 	binpath="/tmp/AdGuardHome/AdGuardHome"
 fi
@@ -15,7 +15,7 @@ check_if_already_running(){
 
 check_wgetcurl(){
 	which curl > /dev/null 2>&1 && downloader="curl -L -k --retry 2 --connect-timeout 20 -o" && return
-	which wget-ssl > /dev/null 2>&1 && downloader="wget-ssl --no-check-certificate -t 2 -T 20 -O" && return
+	which wget > /dev/null 2>&1 && downloader="wget --no-check-certificate -t 2 -T 20 -O" && return
 	[[ -z "$1" ]] && opkg update || (echo "未安装 opkg!" && EXIT 1)
 	[[ -z "$1" ]] && (opkg remove wget wget-nossl --force-depends ; opkg install wget ; check_wgetcurl 1 ; return)
 	[ "$1" == "1" ] && (opkg install curl ; check_wgetcurl 2 ; return)
@@ -24,13 +24,14 @@ check_wgetcurl(){
 
 check_latest_version(){
 	check_wgetcurl
+	echo "开始检查更新,请耐心等待..."
 	latest_ver="$(curl -s https://api.github.com/repos/AdguardTeam/AdGuardHome/releases 2>/dev/null | grep 'tag_name' | egrep -o "v[0-9].+[0-9.]" | awk 'NR==1')"
-	if [[ -z "$latest_ver" ]]; then
+	if [[ -z "${latest_ver}" ]]; then
 		echo -e "\n检查更新失败,请检查网络或稍后重试!"
 		EXIT 1
 	fi
-	if [ -f $binpath ]; then
-		now_ver="$(/usr/bin/AdGuardHome/AdGuardHome --version 2>/dev/null | egrep -o "v[0-9].+[0-9]" | sed -r 's/(.*), c(.*)/\1/')"
+	if [ -f ${binpath} ]; then
+		now_ver="$(${binpath} --version 2>/dev/null | egrep -o "v[0-9].+[0-9]" | sed -r 's/(.*), c(.*)/\1/')"
 	else
 		now_ver="未知"
 	fi
@@ -40,7 +41,7 @@ check_latest_version(){
 	if [ ! "${latest_ver}" == "${now_ver}" ] || [ "$1" == "force" ]; then
 		doupdate_core
 	else
-		echo -e "\n当前 AdGuardHome 已是最新版本,无需下载更新!" 
+		echo -e "\n当前 AdGuardHome 已是最新版本,无需更新!" 
 		if [ ! -z "$upxflag" ]; then
 			filesize=$(ls -l $binpath | awk '{ print $5 }')
 			if [ $filesize -gt "10240000" ]; then
@@ -65,18 +66,18 @@ check_latest_version(){
 doupx(){
 	GET_Arch
 	upx_name="upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz"
-	echo -e "开始下载 $upx_name ...\n"
-	$downloader /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz "https://github.com/upx/upx/releases/download/v${upx_latest_ver}/$upx_name"
+	echo -e "开始下载 ${upx_name} ...\n"
+	$downloader /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz "https://github.com/upx/upx/releases/download/v${upx_latest_ver}/${upx_name}"
 	if [ ! -e /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz ]; then
-		echo -e "\n$upx_name 下载失败!\n" 
+		echo -e "\n${upx_name} 下载失败!\n" 
 		EXIT 1
 	else
-		echo -e "\n$upx_name 下载成功!\n" 
+		echo -e "\n${upx_name} 下载成功!\n" 
 	fi
 	which xz > /dev/null 2>&1 || (opkg list | grep ^xz || opkg update > /dev/null 2>&1 && opkg install xz --force-depends) || (echo "软件包 xz 安装失败!" && EXIT 1)
 	mkdir -p /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux
 	xz -d -c /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz | tar -x -C "/tmp"
-	[ ! -f /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux/upx ] && echo -e "\n$upx_name 解压失败!" && EXIT 1
+	[ ! -f /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux/upx ] && echo -e "\n${upx_name} 解压失败!" && EXIT 1
 }
 
 doupdate_core(){
@@ -87,7 +88,7 @@ doupdate_core(){
 	[ ! -s /tmp/run/AdHlinks.txt ] && echo -e "\n未选择任何下载链接,取消更新操作!" && EXIT 1
 	while read link
 	do
-		eval link="$link"
+		eval link="${link}"
 		echo -e "文件名称:${link##*/}"
 		echo -e "\n开始下载 AdGuardHome 核心文件...\n" 
 		$downloader /tmp/AdGuardHomeupdate/${link##*/} "$link" 2>&1
@@ -115,13 +116,12 @@ doupdate_core(){
 	fi
 	chmod 777 $downloadbin
 	echo -e "\nAdGuardHome 核心大小: $(awk 'BEGIN{printf "%.2fMB\n",'$((`ls -l $downloadbin | awk '{print $5}'`))'/1000000}')"
-	if [ -n "$upxflag" ]; then
+	if [ -n "${upxflag}" ]; then
 		doupx
 		echo -e "使用 UPX 压缩可能会花很长时间,期间请耐心等待!\n正在压缩 $downloadbin ..."
 		/tmp/upx-${upx_latest_ver}-${Arch_upx}_linux/upx $upxflag $downloadbin > /dev/null 2>&1
 		echo -e "\n压缩后的核心大小: $(awk 'BEGIN{printf "%.2fMB\n",'$((`ls -l $downloadbin | awk '{print $5}'`))'/1000000}')"
 	fi
-	echo -e "\n关闭 AdGuardHome 服务..." 
 	/etc/init.d/AdGuardHome stop
 	[ -f "$binpath" ] && rm -f $binpath
 	echo -e "\n移动 AdGuardHome 核心文件到 ${binpath%/*} ..."
@@ -181,7 +181,7 @@ GET_Arch() {
 	case $Archt in
 	mipsel)
 		Arch_upx="mipsel"
-		upx_latest_ver="3.94"
+		upx_latest_ver="3.95"
 	;;
 	*)
 		Arch_upx="$Arch"
