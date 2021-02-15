@@ -42,8 +42,8 @@ dns:
   rewrites: []
   upstream_dns:
   - https://dns.alidns.com/dns-query
-  - https://dns.pub/dns-query
-  - 119.29.29.29
+  - https://dns.google/dns-query
+  - 114.114.114.114
   - 223.5.5.5
   upstream_dns_file: ""
   all_servers: true
@@ -64,19 +64,19 @@ filters:
   url: https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
   name: AdGuard Simplified Domain Names filter
   id: 1
-- enabled: true
-  url: https://easylist-downloads.adblockplus.org/easylistchina.txt
-  name: EasyList China
-  id: 1610243526
+- enabled: false
+  url: https://anti-ad.net/easylist.txt
+  name: CHN: anti-AD
+  id: 2
 - enabled: true
   url: https://gitee.com/halflife/list/raw/master/ad.txt
-  name: halflife 多功能去广告
+  name: halflife 多功能整合版
   id: 1610243527
 - enabled: true
   url: https://banbendalao.coding.net/p/adgk/d/ADgk/git/raw/master/ADgk.txt
   name: ADgk
   id: 1610243529
-- enabled: false
+- enabled: true
   url: https://gitee.com/xinggsf/Adblock-Rule/raw/master/mv.txt
   name: 乘风 视频广告
   id: 1601465781
