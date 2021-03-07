@@ -4,7 +4,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-adguardhome
-PKG_RELEASE:=20210215
+PKG_RELEASE:=20210307
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 

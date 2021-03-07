@@ -8,57 +8,45 @@ fi
 [ ! -d ${binpath%/*} ] && mkdir -p ${binpath%/*}
 upxflag=$(uci get AdGuardHome.AdGuardHome.upxflag 2>/dev/null)
 
-check_if_already_running(){
+Check_Task(){
 	running_tasks="$(ps | grep "AdGuardHome" | grep "update_core" | grep -v "grep" | awk '{print $1}' | wc -l)"
 	[ "${running_tasks}" -gt "2" ] && echo -e "\n已经有一个任务正在运行,请等待其执行结束或将其强行停止!"  && EXIT 2
 }
 
-check_wgetcurl(){
-	which curl > /dev/null 2>&1 && downloader="curl -L -k --retry 2 --connect-timeout 20 -o" && return
-	which wget > /dev/null 2>&1 && downloader="wget --no-check-certificate -t 2 -T 20 -O" && return
-	[[ -z "$1" ]] && opkg update || (echo "未安装 opkg!" && EXIT 1)
-	[[ -z "$1" ]] && (opkg remove wget wget-nossl --force-depends ; opkg install wget ; check_wgetcurl 1 ; return)
-	[ "$1" == "1" ] && (opkg install curl ; check_wgetcurl 2 ; return)
+Check_Downloader(){
+	which wget > /dev/null 2>&1 && PKG="wget" && return
+	which curl > /dev/null 2>&1 && PKG="curl" && return
+	
 	echo "未安装 curl 或 wget!" && EXIT 1
 }
 
-check_latest_version(){
-	check_wgetcurl
-	echo "开始检查更新,请耐心等待..."
-	latest_ver="$(curl -s https://api.github.com/repos/AdguardTeam/AdGuardHome/releases 2>/dev/null | grep 'tag_name' | egrep -o "v[0-9].+[0-9.]" | awk 'NR==1')"
-	if [[ -z "${latest_ver}" ]]; then
-		echo -e "\n检查更新失败,请检查网络或稍后重试!"
-		EXIT 1
-	fi
+Check_Updates(){
+	Check_Downloader
+	case ${PKG} in
+	curl)
+		Downloader="curl -L -k -o"
+		_Downloader="curl -s"
+	;;
+	wget)
+		Downloader="wget -nv --no-check-certificate -t 2 -T 20 -O"
+		_Downloader="wget -q -O -"
+	;;
+	esac
+	echo "[${PKG}] 开始检查更新,请耐心等待..."
+	Cloud_Version="$(${_Downloader} https://api.github.com/repos/AdguardTeam/AdGuardHome/releases 2>/dev/null | grep 'tag_name' | egrep -o "v[0-9].+[0-9.]" | awk 'NR==1')"
+	[[ -z "${Cloud_Version}" ]] && echo -e "\n检查更新失败,请检查网络或稍后重试!" && EXIT 1
 	if [ -f ${binpath} ]; then
-		now_ver="$(${binpath} --version 2>/dev/null | egrep -o "v[0-9].+[0-9]" | sed -r 's/(.*), c(.*)/\1/')"
+		Current_Version="$(${binpath} --version 2>/dev/null | egrep -o "v[0-9].+[0-9]" | sed -r 's/(.*), c(.*)/\1/')"
 	else
-		now_ver="未知"
+		Current_Version="未知"
 	fi
-	[[ -z "${now_ver}" ]] && now_ver="未知"
+	[[ -z "${Current_Version}" ]] && Current_Version="未知"
 	echo -e "\n执行文件路径: ${binpath%/*}\n\n正在检查更新,请耐心等待..."
-	echo -e "\n当前 AdGuardHome 版本: ${now_ver}\n云端 AdGuardHome 版本: ${latest_ver}"
-	if [ ! "${latest_ver}" == "${now_ver}" ] || [ "$1" == "force" ]; then
+	echo -e "\n当前 AdGuardHome 版本: ${Current_Version}\n云端 AdGuardHome 版本: ${Cloud_Version}"
+	if [ ! "${Cloud_Version}" == "${Current_Version}" ] || [ "$1" == "force" ]; then
 		doupdate_core
 	else
 		echo -e "\n当前 AdGuardHome 已是最新版本,无需更新!" 
-		if [ ! -z "$upxflag" ]; then
-			filesize=$(ls -l $binpath | awk '{ print $5 }')
-			if [ $filesize -gt "10240000" ]; then
-				doupx
-				mkdir -p /tmp/AdGuardHomeupdate/AdGuardHome > /dev/null 2>&1
-				rm -f /tmp/AdGuardHomeupdate/AdGuardHome/${binpath##*/}
-				echo -e "使用 UPX 压缩可能会花很长时间,期间请耐心等待!"
-				/tmp/upx-${upx_latest_ver}-${Arch_upx}_linux/upx $upxflag $binpath -o /tmp/AdGuardHomeupdate/AdGuardHome/${binpath##*/} > /dev/null 2>&1
-				echo -e "\n压缩后的核心大小: $(awk 'BEGIN{printf "%.2fMB\n",'$((`ls -l $downloadbin | awk '{print $5}'`))'/1000000}')"
-				echo -e "\n停止 AdGuardHome 服务..."
-				/etc/init.d/AdGuardHome stop
-				[ -f $binpath ] && rm -f $binpath
-				mv -f /tmp/AdGuardHomeupdate/AdGuardHome/${binpath##*/} $binpath
-				echo -e "\n重启 AdGuardHome 服务..."
-				/etc/init.d/AdGuardHome restart
-			fi
-		fi
 		EXIT 0
 	fi
 }
@@ -67,7 +55,7 @@ doupx(){
 	GET_Arch
 	upx_name="upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz"
 	echo -e "开始下载 ${upx_name} ...\n"
-	$downloader /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz "https://github.com/upx/upx/releases/download/v${upx_latest_ver}/${upx_name}"
+	$Downloader /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz "https://github.com/upx/upx/releases/download/v${upx_latest_ver}/${upx_name}"
 	if [ ! -e /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz ]; then
 		echo -e "\n${upx_name} 下载失败!\n" 
 		EXIT 1
@@ -76,6 +64,7 @@ doupx(){
 	fi
 	which xz > /dev/null 2>&1 || (opkg list | grep ^xz || opkg update > /dev/null 2>&1 && opkg install xz --force-depends) || (echo "软件包 xz 安装失败!" && EXIT 1)
 	mkdir -p /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux
+	echo -e "正在解压 ${upx_name} ...\n" 
 	xz -d -c /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux.tar.xz | tar -x -C "/tmp"
 	[ ! -f /tmp/upx-${upx_latest_ver}-${Arch_upx}_linux/upx ] && echo -e "\n${upx_name} 解压失败!" && EXIT 1
 }
@@ -91,8 +80,9 @@ doupdate_core(){
 		eval link="${link}"
 		echo -e "文件名称:${link##*/}"
 		echo -e "\n开始下载 AdGuardHome 核心文件...\n" 
-		$downloader /tmp/AdGuardHomeupdate/${link##*/} "$link" 2>&1
-		if [ "$?" != "0" ]; then
+		echo "${link##*/} $link"
+		$Downloader /tmp/AdGuardHomeupdate/${link##*/} $link
+		if [ ! "$?" -eq 0 ];then
 			echo -e "\n下载失败,尝试使用其他链接更新..."
 			rm -f /tmp/AdGuardHomeupdate/${link##*/}
 		else
@@ -101,12 +91,12 @@ doupdate_core(){
 		fi 
 	done < "/tmp/run/AdHlinks.txt"
 	rm -f /tmp/run/AdHlinks.txt
-	[[ -z "$success" ]] && echo -e "\n核心下载失败!" && EXIT 1
+	[[ -z "$success" ]] && echo -e "\nAdGuardHome 核心下载失败!" && EXIT 1
 	if [ "${link##*.}" == "gz" ]; then
-		echo -e "\n解压 AdGuardHome ..."
+		echo -e "\n正在解压 AdGuardHome ..."
 		tar -zxf "/tmp/AdGuardHomeupdate/${link##*/}" -C "/tmp/AdGuardHomeupdate/"
 		if [ ! -e "/tmp/AdGuardHomeupdate/AdGuardHome" ]; then
-			echo "AdGuardHome 核心下载失败!" 
+			echo "AdGuardHome 核心解压失败!" 
 			rm -rf "/tmp/AdGuardHomeupdate" > /dev/null 2>&1
 			EXIT 1
 		fi
@@ -121,6 +111,8 @@ doupdate_core(){
 		echo -e "使用 UPX 压缩可能会花很长时间,期间请耐心等待!\n正在压缩 $downloadbin ..."
 		/tmp/upx-${upx_latest_ver}-${Arch_upx}_linux/upx $upxflag $downloadbin > /dev/null 2>&1
 		echo -e "\n压缩后的核心大小: $(awk 'BEGIN{printf "%.2fMB\n",'$((`ls -l $downloadbin | awk '{print $5}'`))'/1000000}')"
+	else
+		echo "UPX 压缩已禁用 !"
 	fi
 	/etc/init.d/AdGuardHome stop
 	[ -f "$binpath" ] && rm -f $binpath
@@ -148,7 +140,6 @@ GET_Arch() {
 	;;
 	"i686")
 		Arch="i386"
-		echo -e "i686 使用 $Arch 的核心可能会导致bug!" 
 	;;
 	"x86")
 		Arch="amd64"
@@ -185,7 +176,7 @@ GET_Arch() {
 	;;
 	*)
 		Arch_upx="$Arch"
-		upx_latest_ver="$($downloader - https://api.github.com/repos/upx/upx/releases/latest 2>/dev/null | egrep 'tag_name' | egrep '[0-9.]+' -o 2>/dev/null)"
+		upx_latest_ver="$(${_Downloader} https://api.github.com/repos/upx/upx/releases/latest 2>/dev/null | egrep 'tag_name' | egrep '[0-9.]+' -o 2>/dev/null)"
 	
 	esac
 	echo -e "\n当前设备架构: $Arch\n"
@@ -198,9 +189,10 @@ EXIT(){
 }
 
 main(){
-	check_if_already_running
-	check_latest_version $1
+	Check_Task
+	Check_Updates $1
 }
+
 trap "EXIT 1" SIGTERM SIGINT
 touch /var/run/update_core
 rm - rf /var/run/update_core_error 2>/dev/null

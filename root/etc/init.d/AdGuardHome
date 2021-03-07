@@ -376,7 +376,7 @@ backup() {
 			echo "$cpret"
 			echo "$cpret" | grep "no space left on device"
 			if [ "$?" == "0" ]; then
-				echo "磁盘已满,删除log重试中"
+				echo "磁盘空间已满,删除 log 文件重试中 ..."
 				del_querylog && continue
 				rm -f -r $backupwdpath/data/filters
 				rm -f -r $workdir/data/filters && continue
@@ -413,21 +413,20 @@ start_service() {
 	if [ -n "$backupfile" ] && [ ! -d "$workdir/data" ]; then
 		restore
 	fi
-	# for overlay data-stk-oo not suppport
 	local cwdfs=$(get_filesystem $workdir)
-	echo "工作目录文件系统: $cwdfs"
+	echo "文件系统: ${cwdfs}"
 	if [ "$cwdfs" == "jffs2" ]; then
 		echo "fs error ln db to tmp $workdir $cwdfs"
 		logger "AdGuardHome" "warning db redirect to tmp"
 		touch $workdir/data/stats.db
 		if [ ! -L $workdir/data/stats.db ]; then
-		mv -f $workdir/data/stats.db /tmp/stats.db 2>/dev/null
-		ln -s /tmp/stats.db $workdir/data/stats.db 2>/dev/null
+			mv -f $workdir/data/stats.db /tmp/stats.db 2>/dev/null
+			ln -s /tmp/stats.db $workdir/data/stats.db 2>/dev/null
 		fi
 		touch $workdir/data/sessions.db
 		if [ ! -L $workdir/data/sessions.db ]; then
-		mv -f $workdir/data/sessions.db /tmp/sessions.db 2>/dev/null
-		ln -s /tmp/sessions.db $workdir/data/sessions.db 2>/dev/null
+			mv -f $workdir/data/sessions.db /tmp/sessions.db 2>/dev/null
+			ln -s /tmp/sessions.db $workdir/data/sessions.db 2>/dev/null
 		fi
 	fi
 	local ADDITIONAL_ARGS=""
@@ -484,7 +483,6 @@ start_service() {
 		fi
 	fi
 	echo "AdGuardHome 服务已启用"
-	echo "luci enable switch=$enabled"
 	(sleep 10 && [ -z "$(pgrep $binpath)" ] && logger "AdGuardHome" "no process in 10s cancel redirect" && _do_redirect 0 )&
 }
 reload_service()
@@ -522,7 +520,7 @@ stop_service()
 			backup
 		fi
 	fi
-	echo "AdGuardHome 服务已禁用"
+	echo "AdGuardHome 服务已停止"
 	touch /var/run/AdGserverdis
 }
 boot() {
