@@ -10,14 +10,14 @@ upxflag=$(uci get AdGuardHome.AdGuardHome.upxflag 2>/dev/null)
 
 Check_Task(){
 	running_tasks="$(ps | grep "AdGuardHome" | grep "update_core" | grep -v "grep" | awk '{print $1}' | wc -l)"
-	[ "${running_tasks}" -gt "2" ] && echo -e "\n已经有一个任务正在运行,请等待其执行结束或将其强行停止!"  && EXIT 2
+	[ "${running_tasks}" -gt "2" ] && echo -e "\n已经有一个任务正在运行,请等待其执行结束或将其强行停止 !"  && EXIT 2
 }
 
 Check_Downloader(){
-	which wget > /dev/null 2>&1 && PKG="wget" && return
 	which curl > /dev/null 2>&1 && PKG="curl" && return
-	
-	echo "未安装 curl 或 wget!" && EXIT 1
+	echo -e "\n未安装 curl !"
+	which wget > /dev/null 2>&1 && PKG="wget" && return
+	echo "未安装 curl 和 wget，无法检测更新 !" && EXIT 1
 }
 
 Check_Updates(){
@@ -46,7 +46,7 @@ Check_Updates(){
 	if [ ! "${Cloud_Version}" == "${Current_Version}" ] || [ "$1" == "force" ]; then
 		doupdate_core
 	else
-		echo -e "\n当前 AdGuardHome 已是最新版本,无需更新!" 
+		echo -e "\n已是最新版本,无需更新 !" 
 		EXIT 0
 	fi
 }
@@ -79,11 +79,11 @@ doupdate_core(){
 	do
 		eval link="${link}"
 		echo -e "文件名称:${link##*/}"
-		echo -e "\n开始下载 AdGuardHome 核心文件...\n" 
+		echo -e "\n开始下载 AdGuardHome 核心文件 ...\n" 
 		echo "${link##*/} $link"
 		$Downloader /tmp/AdGuardHomeupdate/${link##*/} $link
 		if [ ! "$?" -eq 0 ];then
-			echo -e "\n下载失败,尝试使用其他链接更新..."
+			echo -e "\n下载失败,尝试使用其他链接更新 ..."
 			rm -f /tmp/AdGuardHomeupdate/${link##*/}
 		else
 			local success=1
@@ -128,7 +128,7 @@ doupdate_core(){
 	rm -rf /tmp/upx*	
 	rm -rf /tmp/AdGuardHomeupdate
 	/etc/init.d/AdGuardHome restart
-	echo -e "\nAdGuardHome 核心更新成功!" 
+	echo -e "\nAdGuardHome 核心更新成功 !" 
 	EXIT 0
 }
 
