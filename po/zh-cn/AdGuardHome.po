@@ -9,7 +9,7 @@ msgid "Manual Config"
 msgstr "手动设置"
 
 msgid "Free and open source, powerful network-wide ads & trackers blocking DNS server."
-msgstr "免费开源，功能强大的全网络广告和跟踪程序拦截DNS服务器"
+msgstr "免费开源，功能强大的网络广告和跟踪程序拦截 DNS 服务器"
 
 msgid "RUNNING"
 msgstr "运行中"
@@ -27,7 +27,7 @@ msgid "Collecting data..."
 msgstr "获取数据中..."
 
 msgid "Enable"
-msgstr "启用 AdGuardHome"
+msgstr "启用"
 
 msgid "Browser management port"
 msgstr "网页管理端口"
@@ -93,7 +93,7 @@ msgid "compress better"
 msgstr "更好的压缩"
 
 msgid "compress best(can be slow for big files)"
-msgstr "最好的压缩[大文件可能慢]"
+msgstr "最好的压缩[大文件可能很慢]"
 
 msgid "try all available compression methods & filters [slow]"
 msgstr "尝试所有可能的压缩方法和过滤器[慢]"
@@ -102,7 +102,7 @@ msgid "try even more compression variants [very slow]"
 msgstr "尝试更多变体压缩手段[很慢]"
 
 msgid "bin use less space,but may have compatibility issues"
-msgstr "减小执行文件空间占用，但是压缩后可能有兼容性问题,部分平台可能无法使用"
+msgstr "减小执行文件空间占用，但是压缩后可能有兼容性问题,部分平台可能无法正常使用"
 
 msgid "Config Path"
 msgstr "配置文件路径"
@@ -162,13 +162,13 @@ msgid "loading..."
 msgstr "载入中..."
 
 msgid "Please save/apply"
-msgstr "请点击[保存&应用]"
+msgstr "请点击[保存/应用]"
 
 msgid "is empty"
 msgstr "为空"
 
 msgid "Press load culculate model and culculate finally save/apply"
-msgstr "先输入你想要的密码,点击[载入计算模块],然后[计算],最后点击下方[保存&应用]"
+msgstr "先输入你想要的密码,点击[载入计算模块],然后点击[计算],最后点击下方[保存&应用]"
 
 msgid "Keep files when system upgrade"
 msgstr "系统升级时保留文件"
