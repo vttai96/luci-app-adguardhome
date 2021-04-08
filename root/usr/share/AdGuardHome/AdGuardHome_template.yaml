@@ -66,24 +66,20 @@ filters:
   id: 1
 - enabled: false
   url: https://anti-ad.net/easylist.txt
-  name: anti-AD
+  name: anti-AD (强拦截,较影响性能)
   id: 2
 - enabled: true
   url: https://gitee.com/halflife/list/raw/master/ad.txt
-  name: halflife 多功能整合版
+  name: HalfLife 多功能整合版
   id: 3
 - enabled: true
   url: https://banbendalao.coding.net/p/adgk/d/ADgk/git/raw/master/ADgk.txt
-  name: ADgk
+  name: AD-gk
   id: 4
 - enabled: true
   url: https://gitee.com/xinggsf/Adblock-Rule/raw/master/mv.txt
   name: 乘风 视频广告
   id: 5
-- enabled: false
-  url: https://gitee.com/xinggsf/Adblock-Rule/raw/master/rule.txt
-  name: 乘风 常规广告
-  id: 6
 user_rules: []
 dhcp:
   enabled: false
