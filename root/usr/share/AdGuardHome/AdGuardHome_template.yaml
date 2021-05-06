@@ -5,7 +5,7 @@ bind_host: 0.0.0.0
 bind_port: 3000
 users:
 - name: root
-  password: $2y$10$FfeQavihMUiXCuJhHuQwy.6EOXDvkXb/S50qI5fXizqarNT/ShhQm
+  password: $2y$10$dGa3/IOphOk9oTcf1NZd4OcYxzxpNYyV13xjG7Rud7kRpZQFOJxVu
 language: ""
 rlimit_nofile: 0
 dns:
@@ -30,7 +30,7 @@ dns:
   parental_block_host: ""
   safebrowsing_block_host: ""
   blocked_services: []
-  cache_size: 4096000
+  cache_size: 409600
   parental_sensitivity: 13
   parental_enabled: false
   safesearch_enabled: false
@@ -43,6 +43,7 @@ dns:
   upstream_dns:
   - https://dns.alidns.com/dns-query
   - https://dns.google/dns-query
+  - tls://dns.alidns.com
   - 114.114.114.114
   - 223.5.5.5
   upstream_dns_file: ""
@@ -53,7 +54,7 @@ tls:
   enabled: false
   server_name: ""
   force_https: false
-  port_https: 443
+  port_https: ""
   port_dns_over_tls: 853
   certificate_chain: ""
   private_key: ""
@@ -69,18 +70,17 @@ filters:
   name: anti-AD (强拦截,较影响性能)
   id: 2
 - enabled: true
-  url: https://gitee.com/halflife/list/raw/master/ad.txt
-  name: HalfLife 多功能整合版
-  id: 3
-- enabled: true
   url: https://banbendalao.coding.net/p/adgk/d/ADgk/git/raw/master/ADgk.txt
   name: AD-gk
-  id: 4
+  id: 3
 - enabled: true
   url: https://gitee.com/xinggsf/Adblock-Rule/raw/master/mv.txt
   name: 乘风 视频广告
-  id: 5
-user_rules: []
+  id: 4
+user_rules:
+- '@@||iwx.mail.qq.com^$important'
+- '@@||gm.mmstat.com^$important'
+- ""
 dhcp:
   enabled: false
   interface_name: ""
@@ -90,7 +90,20 @@ dhcp:
   range_end: ""
   lease_duration: 86400
   icmp_timeout_msec: 1000
-clients: []
+clients:
+- name: OpenWrt
+  tags:
+  - os_linux
+  ids:
+  - 127.0.0.1
+  use_global_settings: true
+  filtering_enabled: false
+  parental_enabled: false
+  safesearch_enabled: false
+  safebrowsing_enabled: false
+  use_global_blocked_services: true
+  blocked_services: []
+  upstreams: []
 log_file: ""
 verbose: false
-schema_version: 5
+schema_version: 10
