@@ -54,7 +54,6 @@ tls:
   enabled: false
   server_name: ""
   force_https: false
-  port_https: ""
   port_dns_over_tls: 853
   certificate_chain: ""
   private_key: ""
