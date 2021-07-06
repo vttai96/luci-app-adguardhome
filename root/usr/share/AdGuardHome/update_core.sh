@@ -16,7 +16,7 @@ Check_Task(){
 Check_Downloader(){
 	which curl > /dev/null 2>&1 && PKG="curl" && return
 	echo -e "\n未安装 curl !"
-	which uclient-fetch > /dev/null 2>&1 && PKG="uclient-fetch" && return
+	which wget-ssl > /dev/null 2>&1 && PKG="wget-ssl" && return
 	echo "未安装 curl 和 wget，无法检测更新 !" && EXIT 1
 }
 
@@ -27,9 +27,9 @@ Check_Updates(){
 		Downloader="curl -L -k -o"
 		_Downloader="curl -s"
 	;;
-	uclient-fetch)
-		Downloader="uclient-fetch --no-check-certificate -T 20 -O"
-		_Downloader="uclient-fetch -q -O -"
+	wget-ssl)
+		Downloader="wget-ssl --no-check-certificate -T 5 -O"
+		_Downloader="wget-ssl -q -O -"
 	;;
 	esac
 	echo "[${PKG}] 开始检查更新,请耐心等待..."
