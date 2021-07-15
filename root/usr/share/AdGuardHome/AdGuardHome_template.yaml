@@ -14,7 +14,7 @@ dns:
   statistics_interval: 90
   protection_enabled: true
   filtering_enabled: true
-  filters_update_interval: 48
+  filters_update_interval: 24
   blocking_mode: nxdomain
   blocked_response_ttl: 10
   querylog_enabled: true
@@ -62,20 +62,24 @@ tls:
 filters:
 - enabled: true
   url: https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
-  name: AdGuard Simplified Domain Names filter
+  name: AdGuard Home
   id: 1
 - enabled: false
-  url: https://anti-ad.net/easylist.txt
-  name: anti-AD (强拦截,较影响性能)
-  id: 2
-- enabled: true
   url: https://banbendalao.coding.net/p/adgk/d/ADgk/git/raw/master/ADgk.txt
   name: AD-gk
-  id: 3
+  id: 2
 - enabled: true
   url: https://gitee.com/xinggsf/Adblock-Rule/raw/master/mv.txt
   name: 乘风 视频广告
+  id: 3
+- enabled: false
+  url: https://anti-ad.net/easylist.txt
+  name: anti-AD
   id: 4
+- enabled: true
+  url: https://gitee.com/xinggsf/Adblock-Rule/raw/master/mv.txt
+  name: EasyList China
+  id: 5
 user_rules:
 - '@@||iwx.mail.qq.com^$important'
 - '@@||gm.mmstat.com^$important'
