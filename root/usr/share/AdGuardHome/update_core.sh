@@ -33,7 +33,7 @@ Check_Updates(){
 	;;
 	esac
 	echo "[${PKG}] 开始检查更新,请耐心等待..."
-	Cloud_Version="$(${_Downloader} https://api.github.com/repos/AdguardTeam/AdGuardHome/releases 2>/dev/null | grep 'tag_name' | egrep -o "v[0-9].+[0-9.]" | awk 'NR==1')"
+	Cloud_Version="$(${_Downloader} https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest 2>/dev/null | grep 'tag_name' | egrep -o "v[0-9].+[0-9.]" | awk 'NR==1')"
 	[[ -z "${Cloud_Version}" ]] && echo -e "\n检查更新失败,请检查网络或稍后重试!" && EXIT 1
 	if [ -f ${binpath} ]; then
 		Current_Version="$(${binpath} --version 2>/dev/null | egrep -o "v[0-9].+[0-9]" | sed -r 's/(.*), c(.*)/\1/')"
